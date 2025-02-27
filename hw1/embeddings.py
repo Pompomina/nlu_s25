@@ -42,7 +42,8 @@ class Embeddings:
         :return: A 2D array of shape (len(words), embedding_size) where
             for each i, the ith row is the embedding for words[i]
         """
-        raise NotImplementedError("Problem 1b has not been completed yet!")
+        return self.vectors[self.indices[words]] if isinstance(words, str) else self.vectors[[self.indices[word] for word in words if word in self.indices]]
+        # raise NotImplementedError("Problem 1b has not been completed yet!")
 
     @classmethod
     def from_file(cls, filename: str) -> "Embeddings":
@@ -53,4 +54,14 @@ class Embeddings:
         :param filename: The name of the file containing the embeddings
         :return: An Embeddings object containing the loaded embeddings
         """
-        raise NotImplementedError("Problem 1b has not been completed yet!")
+        # reads all lines of the file into a list
+        with open(filename, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        # parses the lines to extract words and their corresponding embeddings
+        words, vectors = zip(*[(line.split()[0], np.fromstring(" ".join(line.split()[1:]), sep=" ")) for line in lines])
+
+        # embedding object
+        return cls(words, np.vstack(vectors))
+
+        # raise NotImplementedError("Problem 1b has not been completed yet!")

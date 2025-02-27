@@ -19,7 +19,14 @@ def cosine_sim(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     :return: An array of shape (m, n), where the entry in row i and
         column j is the cosine similarity between x[i] and y[j]
     """
-    raise NotImplementedError("Problem 3b has not been completed yet!")
+    # Normalize the vectors
+    x_norm = x / np.linalg.norm(x, axis=1, keepdims=True)
+    y_norm = y / np.linalg.norm(y, axis=1, keepdims=True)
+
+    # Compute cosine similarity
+    return np.dot(x_norm, y_norm.T)
+
+    # raise NotImplementedError("Problem 3b has not been completed yet!")
 
 
 def get_closest_words(embeddings: Embeddings, vectors: np.ndarray,
@@ -37,8 +44,31 @@ def get_closest_words(embeddings: Embeddings, vectors: np.ndarray,
         k words that are closest to vectors[i] in the embedding space,
         not necessarily in order
     """
-    raise NotImplementedError("Problem 3c has not been completed yet!")
+    sims = cosine_sim(vectors, embeddings.vectors)  # Compute cosine similarity
 
+    # Get indices of the top-k closest words (descending similarity order)
+    top_k_indices = np.argsort(-sims, axis=1)[:, :k]
+
+    # Convert indices to words
+    closest_words = [[embeddings.words[idx] for idx in row] for row in top_k_indices]
+
+    # Sort each list lexicographically if cosine similarities are identical
+    for i in range(len(closest_words)):
+        closest_words[i].sort(key=lambda word: (sims[i, embeddings.indices[word]], word), reverse=True)
+
+    return closest_words
+    '''
+    similarities = cosine_sim(vectors, embeddings.vectors)
+    closest_words = []
+    for i in range(len(vectors)):
+        top_k_indices = np.argsort(-similarities[i])[:k]
+        row_words = [embeddings.words[idx] for idx in top_k_indices]
+        closest_words.append(row_words)
+    return closest_words
+
+    '''
+
+    # raise NotImplementedError("Problem 3c has not been completed yet!")
 
 # This type alias represents the format that the testing data should be
 # deserialized into. An analogy is a tuple of 4 strings, and an
@@ -59,7 +89,30 @@ def load_analogies(filename: str) -> AnalogiesDataset:
         format of the data is described in the problem set and in the
         docstring for the AnalogiesDataset type alias
     """
-    raise NotImplementedError("Problem 2b has not been completed yet!")
+    analogies = {}  # Dictionary to store relation type
+    current_relation = None  # Keeps track of the current relation type
+
+    with open(filename, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip().lower()
+            if not line:
+                continue
+            # If the line starts with ":"， new relation type
+            if line.startswith(":"):
+                current_relation = line[1:].strip()  # Remove ":" and extra spaces
+                analogies[current_relation] = []  # Initialize list for this relation type
+            else:
+                # analogy line with four words otherwise
+                '''
+                w1, w2, w3, w4 = map(str.lower, line.split())
+                dataset[current_relation].append((w1, w2, w3, w4))
+                '''
+                words = line.split()
+                if len(words) == 4:
+                    analogies[current_relation].append(tuple(words))
+    return analogies
+
+# raise NotImplementedError("Problem 2b has not been completed yet!")
 
 
 def run_analogy_test(embeddings: Embeddings, test_data: AnalogiesDataset,
@@ -80,4 +133,12 @@ def run_analogy_test(embeddings: Embeddings, test_data: AnalogiesDataset,
         that maps each relation type to the analogy question accuracy
         attained by embeddings on analogies from that relation type
     """
-    raise NotImplementedError("Problem 3d has not been completed yet!")
+
+    return {
+        relation: sum(
+            w4 in get_closest_words(embeddings, [embeddings[w2] - embeddings[w1] + embeddings[w3]], k=k)[0]
+            for w1, w2, w3, w4 in analogies if all(w in embeddings for w in (w1, w2, w3, w4))
+        ) / len(analogies) if analogies else 0.0
+        for relation, analogies in test_data.items()
+    }
+# raise NotImplementedError("Problem 3d has not been completed yet!")
