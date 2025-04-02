@@ -1,0 +1,2 @@
+/opt/slurm/data/slurmd/job41790/slurm_script: line 18: module: command not found
+bash: hpc/run_truthfulqa_evaluation.sh: No such file or directory
